@@ -1,0 +1,9 @@
+{
+  "name": "Veer Stock Manager",
+  "short_name": "Veer Stock",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "orientation": "portrait"
+}
