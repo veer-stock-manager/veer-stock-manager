@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <title>Veer Stock Manager</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            padding-bottom: 80px;
+            overflow-x: hidden;
+        }
+
+        /* PIN Lock Screen */
+        #lock-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--surface);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pin-container {
+            text-align: center;
+            max-width: 300px;
+        }
+
+        .pin-dots {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .dot {
+            width: 15px;
+            height: 15px;
+            border: 2px solid var(--text-light);
+            border-radius: 50%;
+        }
+
+        .dot.active {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .key {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 65px;
+            height: 65px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* App Header */
+        header {
+            background: var(--surface);
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+            text-align: center;
+        }
+
+        .stat-card {
+            background: var(--bg);
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-card span {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            display: block;
+            text-transform: uppercase;
+        }
+
+        .stat-card strong {
+            font-size: 1.1rem;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 12px;
+            margin-top: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--bg);
+        }
+
+        /* App Tabs Layout */
+        .app-page {
+            display: none;
+            padding: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .app-page.active {
+            display: block;
+        }
+
+        /* Gallery Page */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            position: relative;
+        }
+
+        .card-img-wrapper {
+            width: 100%;
+            height: 150px;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .card-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-body {
+            padding: 10px;
+        }
+
+        .size-badge-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 6px;
+        }
+
+        .size-badge {
+            font-size: 0.7rem;
+            background: var(--bg);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            font-weight: bold;
+        }
+
+        /* Bottom Mobile Bar */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            height: 65px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 500;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 0.75rem;
+            width: 33%;
+            cursor: pointer;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            font-size: 1.4rem;
+        }
+
+        .fab {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            font-size: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: translateY(-12px);
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+        }
+
+        /* Overlay Modals */
+        .view-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            z-index: 1000;
+            justify-content: center;
+            align-items: flex-end;
+        }
+
+        .view-content {
+            background: var(--surface);
+            width: 100%;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .form-group {
+            margin-bottom: 14px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+        }
+
+        .custom-size-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .custom-size-row input[type="text"] {
+            flex: 2;
+        }
+
+        .custom-size-row input[type="number"] {
+            flex: 1;
+        }
+
+        .btn-remove-size {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 0 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .camera-btn-wrapper {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            background: var(--bg);
+            position: relative;
+        }
+
+        .camera-btn-wrapper input[type="file"] {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+        }
+
+        .img-preview {
+            width: 100%;
+            max-height: 120px;
+            object-fit: contain;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-close { background: var(--bg); color: var(--text); }
+        .btn-secondary { background: var(--bg); color: var(--primary); border: 1px solid var(--primary); padding: 8px; font-size: 0.85rem; border-radius: 6px; width: auto; font-weight: bold;}
+        .btn-danger { background: var(--danger); color: white; }
+
+        .history-item {
+            background: var(--surface);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .history-item:hover {
+            background: #f1f5f9;
+        }
+
+        .edit-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .edit-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .edit-label-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-rename-size {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 2px;
+        }
+
+        .edit-box input {
+            width: 80px;
+            padding: 6px;
+            text-align: center;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="lock-screen">
+        <div class="pin-container">
+            <h2>Veer Stock Manager</h2>
+            <p id="pin-instruction" style="color: var(--text-light); margin-bottom: 15px;">Organization Security PIN</p>
+            <div class="pin-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+            
+            <div class="keypad">
+                <button class="key" onclick="pressKey('1')">1</button><button class="key" onclick="pressKey('2')">2</button><button class="key" onclick="pressKey('3')">3</button>
+                <button class="key" onclick="pressKey('4')">4</button><button class="key" onclick="pressKey('5')">5</button><button class="key" onclick="pressKey('6')">6</button>
+                <button class="key" onclick="pressKey('7')">7</button><button class="key" onclick="pressKey('8')">8</button><button class="key" onclick="pressKey('9')">9</button>
+                <button class="key" onclick="pressKey('C')">C</button><button class="key" onclick="pressKey('0')">0</button>
+            </div>
+            
+            <button class="btn-secondary" style="margin-top: 20px; width: 100%;" onclick="startPinChangeWorkflow()">⚙️ Change Security PIN</button>
+        </div>
+    </div>
+
+    <header>
+        <h2 id="page-title">Stock Gallery</h2>
+        <div class="stats-container">
+            <div class="stat-card"><span id="stat-designs">0</span><strong>Designs</strong></div>
+            <div class="stat-card"><span id="stat-pcs">0</span><strong>Total Pcs</strong></div>
+            <div class="stat-card"><span id="stat-sold">0</span><strong>Sold</strong></div>
+        </div>
+        <input type="text" class="search-bar" id="search" placeholder="Search design number..." oninput="renderGallery()">
+    </header>
+
+    <div id="page-gallery" class="app-page active">
+        <div id="gallery" class="grid"></div>
+        <div id="empty-msg" style="text-align: center; color: var(--text-light); padding: 40px 0;">No designs stored in cloud database yet.</div>
+    </div>
+
+    <div id="page-history" class="app-page">
+        <h3 style="margin-bottom: 12px;">Organization History Ledger</h3>
+        <div id="global-history-log"></div>
+    </div>
+
+    <div class="bottom-nav">
+        <button class="nav-item active" id="nav-gal" onclick="switchPage('gallery')">
+            <div class="nav-icon">📁</div><span>Gallery</span>
+        </button>
+        <button class="nav-item" onclick="openModal('add-modal')">
+            <div class="fab">+</div>
+        </button>
+        <button class="nav-item" id="nav-hist" onclick="switchPage('history')">
+            <div class="nav-icon">📊</div><span>History</span>
+        </button>
+    </div>
+
+    <div id="add-modal" class="view-overlay" onclick="closeModal(event, 'add-modal')">
+        <div class="view-content" onclick="event.stopPropagation()">
+            <h3>Create Product Entry</h3>
+            <hr style="margin: 12px 0; border: 0; border-top: 1px solid var(--border);">
+            
+            <div class="form-group">
+                <label>Design Number / Code</label>
+                <input type="text" id="new-design-id" placeholder="e.g. D-402">
+            </div>
+
+            <div class="form-group">
+                <label>Capture / Upload Image</label>
+                <div class="camera-btn-wrapper">
+                    <span>📸 Take Photo / Upload</span>
+                    <input type="file" id="new-design-file" accept="image/*" onchange="previewImage(this)">
+                    <img id="upload-preview" class="img-preview" alt="Preview">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <label style="margin-bottom: 0;">Add Required Sizes</label>
+                    <button type="button" class="btn-secondary" onclick="addCustomSizeRow()">➕ Add Size Option</button>
+                </div>
+                <div id="custom-sizes-container">
+                    <div class="custom-size-row">
+                        <input type="text" placeholder="Size Name (e.g. M, 32, 4XL)" class="input-sz-name">
+                        <input type="number" placeholder="Qty" value="0" min="0" class="input-sz-qty">
+                        <button type="button" class="btn-remove-size" onclick="this.parentElement.remove()">X</button>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="addDesign()">Save</button>
+            <button class="btn btn-close" onclick="document.getElementById('add-modal').style.display='none'">Cancel</button>
+        </div>
+    </div>
+
+    <div id="detail-modal" class="view-overlay" onclick="closeModal(event, 'detail-modal')">
+        <div class="view-content" onclick="event.stopPropagation()">
+            <h3 id="detail-title">Stock Audit</h3>
+            <div id="detail-sizes-breakdown" style="margin: 8px 0 15px 0; font-size:0.9rem; color:var(--text-light)"></div>
+            
+            <div style="background: var(--bg); padding: 14px; border-radius: 10px; border: 1px dashed var(--text-light); margin-bottom: 15px;">
+                <h4 style="font-size: 0.9rem; color: var(--text); margin-bottom: 8px;">🖼️ Design Photo Manager</h4>
+                <div class="camera-btn-wrapper" style="padding: 8px; background: white;">
+                    <span id="detail-img-status-text">📸 Update / Add Photo</span>
+                    <input type="file" id="edit-design-file" accept="image/*" onchange="updateDesignImage(this)">
+                </div>
+            </div>
+
+            <div style="background: var(--bg); padding: 14px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 15px;">
+                <div class="form-group">
+                    <label>Standard Transaction Action</label>
+                    <select id="action-type">
+                        <option value="sell">Dispatch / Sell Stock (-)</option>
+                        <option value="add">Receive / Add Stock (+)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Select Size Target</label>
+                    <select id="action-size"></select>
+                </div>
+                <div class="form-group">
+                    <label>Quantity</label>
+                    <input type="number" id="action-qty" value="1" min="1">
+                </div>
+                <button class="btn btn-primary" onclick="updateStock()">Confirm Transaction</button>
+            </div>
+
+            <div style="background: var(--bg); padding: 14px; border-radius: 10px; border: 1px solid var(--warning); margin-bottom: 15px;">
+                <h4 style="font-size: 0.9rem; color: var(--warning); margin-bottom: 4px;">✏️ Direct Correction & Editing Options</h4>
+                <p style="font-size: 0.75rem; color: var(--text-light); margin-bottom: 12px;">Change quantity below, or tap <strong>✏️</strong> next to a size name to rename it entirely.</p>
+                <div id="direct-edit-sizes-grid" class="edit-grid"></div>
+                <button class="btn" style="background: var(--warning); color: white; padding: 10px; font-size: 0.9rem; margin-top: 12px;" onclick="saveDirectQuantityCorrections()">Save Corrections</button>
+            </div>
+
+            <div style="background: var(--bg); padding: 14px; border-radius: 10px; border: 1px dashed var(--primary); margin-bottom: 15px;">
+                <h4 style="font-size: 0.9rem; color: var(--primary); margin-bottom: 8px;">➕ Create / Add New Size Track to Design</h4>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="new-extra-size-name" placeholder="e.g. XXL, 42, 5XL" style="flex:2; padding: 8px; border:1px solid var(--border); border-radius:6px;">
+                    <input type="number" id="new-extra-size-qty" value="0" min="0" style="flex:1; padding: 8px; border:1px solid var(--border); border-radius:6px; text-align: center;">
+                    <button class="btn-secondary" onclick="addNewSizeToExistingDesign()" style="margin-top:0;">Add</button>
+                </div>
+            </div>
+
+            <h4 style="margin-top: 15px;">Item Transaction History</h4>
+            <div id="history-log" style="max-height: 150px; overflow-y: auto; margin-bottom: 15px;"></div>
+            
+            <button class="btn btn-danger" onclick="deleteDesign()">🗑️ Delete Entire Design</button>
+            <button class="btn btn-close" style="margin-top: 10px;" onclick="document.getElementById('detail-modal').style.display='none'">Close</button>
+        </div>
+    </div>
+
+    <div id="history-summary-modal" class="view-overlay" onclick="closeModal(event, 'history-summary-modal')">
+        <div class="view-content" onclick="event.stopPropagation()">
+            <h3 id="history-summary-title">Batch Event Breakdown</h3>
+            <hr style="margin: 12px 0; border: 0; border-top: 1px solid var(--border);">
+            <div id="history-summary-body" style="padding: 10px 0; font-size: 0.95rem; line-height: 1.6;"></div>
+            <button class="btn btn-close" onclick="document.getElementById('history-summary-modal').style.display='none'">Dismiss</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBPozPaxvkOr3aEMwAeuyEreq4KzBShY-4",
+            authDomain: "veer-stock-manager.firebaseapp.com",
+            projectId: "veer-stock-manager",
+            storageBucket: "veer-stock-manager.firebasestorage.app",
+            messagingSenderId: "1009572162764",
+            appId: "1:1009572162764:web:d7d8c23bcbfb1470cea669"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let serverDesigns = [];
+        let serverLogs = [];
+        let activeDesignId = null;
+        let uploadedImgBase64 = null;
+
+        // Remote Sync Listening Architecture
+        onSnapshot(collection(db, "garments"), (snapshot) => {
+            serverDesigns = [];
+            snapshot.forEach((doc) => { serverDesigns.push(doc.data()); });
+            renderGallery();
+            updateStats();
+            if(activeDesignId && document.getElementById('detail-modal').style.display === 'flex') {
+                const stillExists = serverDesigns.some(d => d.id === activeDesignId);
+                if (stillExists) {
+                    showDetail(activeDesignId);
+                } else {
+                    document.getElementById('detail-modal').style.display = 'none';
+                    activeDesignId = null;
+                }
+            }
+        });
+
+        onSnapshot(collection(db, "logs"), (snapshot) => {
+            serverLogs = [];
+            snapshot.forEach((doc) => { serverLogs.push(doc.data()); });
+            serverLogs.sort((a,b) => b.timestamp - a.timestamp);
+            renderGlobalLogs();
+            updateStats();
+        });
+
+        window.switchPage = function(page) {
+            document.querySelectorAll('.app-page').forEach(p => p.classList.remove('active'));
+            document.getElementById('nav-gal').classList.remove('active');
+            document.getElementById('nav-hist').classList.remove('active');
+
+            if(page === 'gallery') {
+                document.getElementById('page-gallery').classList.add('active');
+                document.getElementById('nav-gal').classList.add('active');
+            } else {
+                document.getElementById('page-history').classList.add('active');
+                document.getElementById('nav-hist').classList.add('active');
+            }
+        }
+
+        window.addCustomSizeRow = function() {
+            const container = document.getElementById('custom-sizes-container');
+            const div = document.createElement('div');
+            div.className = 'custom-size-row';
+            div.innerHTML = `
+                <input type="text" placeholder="Size Name (e.g. M, 32, 4XL)" class="input-sz-name">
+                <input type="number" placeholder="Qty" value="0" min="0" class="input-sz-qty">
+                <button type="button" class="btn-remove-size" onclick="this.parentElement.remove()">X</button>
+            `;
+            container.appendChild(div);
+        }
+
+        window.previewImage = function(input) {
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedImgBase64 = e.target.result;
+                    document.getElementById('upload-preview').src = uploadedImgBase64;
+                    document.getElementById('upload-preview').style.display = 'block';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        window.addDesign = async function() {
+            const id = document.getElementById('new-design-id').value.trim();
+            if (!id) return alert("Enter Design ID");
+
+            let sizesObj = {};
+            const rows = document.querySelectorAll('.custom-size-row');
+            let logDetailsStr = "Initial Allocation Details:\n";
+            
+            rows.forEach(row => {
+                const sName = row.querySelector('.input-sz-name').value.trim().toUpperCase();
+                const sQty = parseInt(row.querySelector('.input-sz-qty').value) || 0;
+                if(sName) {
+                    sizesObj[sName] = sQty;
+                    logDetailsStr += ` Size ${sName}: ${sQty} Pcs\n`;
+                }
+            });
+
+            if(Object.keys(sizesObj).length === 0) return alert("Please specify at least one size value allocation.");
+
+            await setDoc(doc(db, "garments", id), {
+                id: id,
+                sizes: sizesObj,
+                img: uploadedImgBase64
+            });
+
+            const logId = Date.now().toString();
+            await setDoc(doc(db, "logs", logId), {
+                id: id,
+                type: 'add',
+                qty: Object.values(sizesObj).reduce((a,b)=>a+b, 0),
+                size: 'Multi-Size Batch Create',
+                details: logDetailsStr,
+                timestamp: Date.now(),
+                dateStr: new Date().toLocaleDateString()
+            });
+
+            document.getElementById('add-modal').style.display = 'none';
+            document.getElementById('new-design-id').value = '';
+            document.getElementById('upload-preview').style.display = 'none';
+            document.getElementById('custom-sizes-container').innerHTML = `
+                <div class="custom-size-row">
+                    <input type="text" placeholder="Size Name (e.g. M, 32, 4XL)" class="input-sz-name">
+                    <input type="number" placeholder="Qty" value="0" min="0" class="input-sz-qty">
+                    <button type="button" class="btn-remove-size" onclick="this.parentElement.remove()">X</button>
+                </div>
+            `;
+            uploadedImgBase64 = null;
+        }
+
+        window.renderGallery = function() {
+            const gallery = document.getElementById('gallery');
+            const search = document.getElementById('search').value.toLowerCase();
+            gallery.innerHTML = '';
+
+            const filtered = serverDesigns.filter(d => d.id.toLowerCase().includes(search));
+            document.getElementById('empty-msg').style.display = filtered.length === 0 ? 'block' : 'none';
+
+            filtered.forEach(d => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.onclick = () => showDetail(d.id);
+                const total = Object.values(d.sizes).reduce((a,b)=>a+b, 0);
+
+                let badgeMarkup = '';
+                Object.keys(d.sizes).forEach(sz => {
+                    badgeMarkup += `<span class="size-badge">${sz}:${d.sizes[sz]}</span>`;
+                });
+
+                card.innerHTML = `
+                    <div class="card-img-wrapper">
+                        ${d.img ? `<img src="${d.img}" class="card-img">` : '<span>No Photo</span>'}
+                    </div>
+                    <div class="card-body">
+                        <strong>${d.id}</strong>
+                        <div style="color:var(--primary); font-weight:bold; font-size:0.85rem;">Total: ${total} Pcs</div>
+                        <div class="size-badge-list">${badgeMarkup || '<span style="color:var(--danger); font-size:0.75rem;">No Sizes Formed</span>'}</div>
+                    </div>
+                `;
+                gallery.appendChild(card);
+            });
+        }
+
+        window.showDetail = function(id) {
+            activeDesignId = id;
+            const design = serverDesigns.find(d => d.id === id);
+            if(!design) return;
+            
+            document.getElementById('detail-title').innerText = `Design: ${design.id}`;
+            
+            const statusLabel = document.getElementById('detail-img-status-text');
+            statusLabel.innerText = design.img ? "🔄 Replace Current Photo" : "📸 Upload Photo (Missing)";
+            statusLabel.style.color = design.img ? "var(--text-light)" : "var(--danger)";
+
+            let breakDown = '';
+            const sizeSelector = document.getElementById('action-size');
+            sizeSelector.innerHTML = '';
+            
+            const editGrid = document.getElementById('direct-edit-sizes-grid');
+            editGrid.innerHTML = '';
+
+            Object.keys(design.sizes).forEach(sz => {
+                breakDown += `[${sz}: ${design.sizes[sz]} Pcs] `;
+                let opt = document.createElement('option');
+                opt.value = sz; opt.innerText = sz;
+                sizeSelector.appendChild(opt);
+
+                // Populate custom modification view entries with unique rename controls
+                editGrid.innerHTML += `
+                    <div class="edit-box">
+                        <div class="edit-label-container">
+                            <span style="font-weight:bold; color:var(--text)">Size ${sz}:</span>
+                            <button class="btn-rename-size" onclick="renameSizeLabel('${sz}')" title="Rename Size Designation">✏️</button>
+                        </div>
+                        <input type="number" data-size="${sz}" value="${design.sizes[sz]}" min="0">
+                    </div>
+                `;
+            });
+            document.getElementById('detail-sizes-breakdown').innerText = breakDown;
+
+            const logBox = document.getElementById('history-log');
+            logBox.innerHTML = '';
+            serverLogs.filter(l => l.id === id).forEach(l => {
+                let color = 'var(--text)';
+                if(l.type === 'add') color = 'var(--success)';
+                if(l.type === 'sell') color = 'var(--danger)';
+                if(l.type === 'correction') color = 'var(--warning)';
+                if(l.type === 'delete') color = 'var(--danger)';
+                if(l.type === 'img_update') color = 'var(--primary)';
+                if(l.type === 'rename') color = 'var(--primary)';
+
+                logBox.innerHTML += `<div style="font-size:0.8rem; border-bottom:1px solid var(--border); padding:6px 0;">
+                    <span style="color:${color}; font-weight:bold;">[${l.type.toUpperCase()}]</span> ${l.size} ${l.qty !== 0 ? `(${l.qty > 0 ? '+' : ''}${l.qty})` : ''}
+                    <span style="float:right; color:var(--text-light);">${l.dateStr}</span>
+                </div>`;
+            });
+
+            document.getElementById('detail-modal').style.display = 'flex';
+        }
+
+        window.renameSizeLabel = async function(oldSizeName) {
+            const design = serverDesigns.find(d => d.id === activeDesignId);
+            if (!design) return;
+
+            const newSizeName = prompt(`Enter a new name label for Size "${oldSizeName}":`, oldSizeName);
+            if (newSizeName === null) return; // User Cancelled
+            
+            const standardizedNewName = newSizeName.trim().toUpperCase();
+            if (!standardizedNewName) return alert("Size name configuration cannot be blank.");
+            if (standardizedNewName === oldSizeName) return; // Unchanged
+
+            if (design.sizes[standardizedNewName] !== undefined) {
+                return alert(`Error: Size label "${standardizedNewName}" already exists on this profile. Adjust quantities directly instead.`);
+            }
+
+            // Remap size key configurations keeping the quantitative values intact
+            let updatedSizes = {};
+            Object.keys(design.sizes).forEach(key => {
+                if (key === oldSizeName) {
+                    updatedSizes[standardizedNewName] = design.sizes[oldSizeName];
+                } else {
+                    updatedSizes[key] = design.sizes[key];
+                }
+            });
+
+            await updateDoc(doc(db, "garments", activeDesignId), { sizes: updatedSizes });
+
+            // Write tracking reference log entry to cloud system
+            const logId = Date.now().toString();
+            await setDoc(doc(db, "logs", logId), {
+                id: activeDesignId,
+                type: 'rename',
+                qty: 0,
+                size: `${oldSizeName} ➡️ ${standardizedNewName}`,
+                details: `Size classification metadata label modified from "${oldSizeName}" to "${standardizedNewName}". Current total volume values conserved.`,
+                timestamp: Date.now(),
+                dateStr: new Date().toLocaleDateString()
+            });
+
+            alert(`Size metrics index reconfigured successfully.`);
+            showDetail(activeDesignId);
+        }
+
+        window.updateDesignImage = function(input) {
+            const file = input.files[0];
+            if (!file || !activeDesignId) return;
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const base64Data = e.target.result;
+                
+                await updateDoc(doc(db, "garments", activeDesignId), { img: base64Data });
+
+                const logId = Date.now().toString();
+                await setDoc(doc(db, "logs", logId), {
+                    id: activeDesignId,
+                    type: 'img_update',
+                    qty: 0,
+                    size: 'Profile Photo Modified',
+                    details: `Design image file catalog assets successfully uploaded or changed for tracking code index ${activeDesignId}.`,
+                    timestamp: Date.now(),
+                    dateStr: new Date().toLocaleDateString()
+                });
+
+                alert("Design profile image updated successfully!");
+                input.value = ""; 
+                showDetail(activeDesignId); 
+            }
+            reader.readAsDataURL(file);
+        }
+
+        window.updateStock = async function() {
+            const type = document.getElementById('action-type').value;
+            const size = document.getElementById('action-size').value;
+            const qty = parseInt(document.getElementById('action-qty').value) || 0;
+            const design = serverDesigns.find(d => d.id === activeDesignId);
+
+            if(!size) return alert("Select or create a valid size tier layout option first");
+            if(type === 'sell' && design.sizes[size] < qty) return alert("Insufficient quantity available to sell!");
+
+            let updatedSizes = {...design.sizes};
+            updatedSizes[size] = type === 'add' ? updatedSizes[size] + qty : updatedSizes[size] - qty;
+
+            await updateDoc(doc(db, "garments", activeDesignId), { sizes: updatedSizes });
+
+            const logId = Date.now().toString();
+            await setDoc(doc(db, "logs", logId), {
+                id: activeDesignId,
+                type: type,
+                qty: type === 'add' ? qty : -qty,
+                size: size,
+                details: `Standard ${type === 'add' ? 'Incoming Stock Addition' : 'Sales Outbound Delivery'} performed for size ${size}: ${qty} Pcs.`,
+                timestamp: Date.now(),
+                dateStr: new Date().toLocaleDateString()
+            });
+
+            document.getElementById('detail-modal').style.display = 'none';
+        }
+
+        window.saveDirectQuantityCorrections = async function() {
+            const design = serverDesigns.find(d => d.id === activeDesignId);
+            if(!design) return;
+
+            let updatedSizes = {...design.sizes};
+            const inputs = document.querySelectorAll('#direct-edit-sizes-grid input');
+            let auditChangesLog = `Direct Ledger Level Adjustment Action Executed:\n`;
+            let deltaFound = false;
+
+            inputs.forEach(input => {
+                const targetSize = input.getAttribute('data-size');
+                const typedValue = parseInt(input.value) || 0;
+                const oldValue = design.sizes[targetSize];
+
+                if(typedValue !== oldValue) {
+                    deltaFound = true;
+                    updatedSizes[targetSize] = typedValue;
+                    const diff = typedValue - oldValue;
+                    auditChangesLog += ` Size ${targetSize}: Adjusted from ${oldValue} to ${typedValue} Pcs (${diff > 0 ? '+' : ''}${diff})\n`;
+                }
+            });
+
+            if(!deltaFound) return alert("No changes detected in your input numbers.");
+
+            await updateDoc(doc(db, "garments", activeDesignId), { sizes: updatedSizes });
+
+            const logId = Date.now().toString();
+            await setDoc(doc(db, "logs", logId), {
+                id: activeDesignId,
+                type: 'correction',
+                qty: 0, 
+                size: 'Multiple Corrections Applied',
+                details: auditChangesLog,
+                timestamp: Date.now(),
+                dateStr: new Date().toLocaleDateString()
+            });
+
+            alert("Quantities updated and tracking adjustments logged successfully.");
+            document.getElementById('detail-modal').style.display = 'none';
+        }
+
+        window.addNewSizeToExistingDesign = async function() {
+            const sName = document.getElementById('new-extra-size-name').value.trim().toUpperCase();
+            const sQty = parseInt(document.getElementById('new-extra-size-qty').value) || 0;
+            const design = serverDesigns.find(d => d.id === activeDesignId);
+
+            if(!sName) return alert("Please specify a new size name.");
+            if(design.sizes[sName] !== undefined) return alert("This size track already exists.");
+
+            let updatedSizes = {...design.sizes};
+            updatedSizes[sName] = sQty;
+
+            await updateDoc(doc(db, "garments", activeDesignId), { sizes: updatedSizes });
+
+            const logId = Date.now().toString();
+            await setDoc(doc(db, "logs", logId), {
+                id: activeDesignId,
+                type: 'add',
+                qty: sQty,
+                size: sName,
+                details: `New specialized tracking metric created for Size ${sName} with structural starting count base value of ${sQty} Pcs.`,
+                timestamp: Date.now(),
+                dateStr: new Date().toLocaleDateString() + " (New Size Formed)"
+            });
+
+            document.getElementById('new-extra-size-name').value = '';
+            document.getElementById('new-extra-size-qty').value = '0';
+            showDetail(activeDesignId);
+        }
+
+        window.deleteDesign = async function() {
+            if (!activeDesignId) return;
+            
+            const confirmation = confirm(`Are you absolutely sure you want to completely delete Design "${activeDesignId}" and clear all its size records from the cloud?`);
+            if (!confirmation) return;
+
+            const targetId = activeDesignId;
+            
+            await deleteDoc(doc(db, "garments", targetId));
+
+            const logId = Date.now().toString();
+            await setDoc(doc(db, "logs", logId), {
+                id: targetId,
+                type: 'delete',
+                qty: 0,
+                size: 'Entire Design Portfolio Removed',
+                details: `Design Profile ${targetId} was intentionally deleted from the system directory catalog archive.`,
+                timestamp: Date.now(),
+                dateStr: new Date().toLocaleDateString()
+            });
+
+            alert(`Design ${targetId} successfully removed.`);
+            document.getElementById('detail-modal').style.display = 'none';
+            activeDesignId = null;
+        }
+
+        window.openHistorySummaryModal = function(logTimestampString) {
+            const targetLog = serverLogs.find(l => l.timestamp.toString() === logTimestampString);
+            if(!targetLog) return;
+
+            document.getElementById('history-summary-title').innerText = `Log ID Reference`;
+            let displayDetails = targetLog.details ? targetLog.details.replace(/\n/g, '<br>') : `Action processed target parameter size ${targetLog.size} with modification index of ${targetLog.qty} total items.`;
+            
+            document.getElementById('history-summary-body').innerHTML = `
+                <strong>Date Action Logged:</strong> ${targetLog.dateStr}<br>
+                <strong>Operation Type:</strong> <span style="text-transform: uppercase; font-weight: bold;">${targetLog.type}</span><br>
+                <strong>Design Code:</strong> ${targetLog.id}<br>
+                <strong>Scope Track:</strong> ${targetLog.size}<br><br>
+                <div style="background:var(--bg); border:1px solid var(--border); padding:10px; border-radius:6px; font-family: monospace;">
+                    ${displayDetails}
+                </div>
+            `;
+            document.getElementById('history-summary-modal').style.display = 'flex';
+        }
+
+        function renderGlobalLogs() {
+            const container = document.getElementById('global-history-log');
+            container.innerHTML = '';
+            serverLogs.forEach(l => {
+                let statusText = '';
+                let badgeColor = 'var(--text-light)';
+                if(l.type === 'add') { statusText = 'Stock Entry Added'; badgeColor = 'var(--success)'; }
+                if(l.type === 'sell') { statusText = 'Stock Sold / Dispatched'; badgeColor = 'var(--danger)'; }
+                if(l.type === 'correction') { statusText = 'Quantities Corrected'; badgeColor = 'var(--warning)'; }
+                if(l.type === 'delete') { statusText = 'Entire Design Deleted 🗑️'; badgeColor = 'var(--danger)'; }
+                if(l.type === 'img_update') { statusText = 'Design Photo Updated'; badgeColor = 'var(--primary)'; }
+                if(l.type === 'rename') { statusText = 'Size Label Renamed'; badgeColor = 'var(--primary)'; }
+
+                container.innerHTML += `
+                    <div class="history-item" onclick="openHistorySummaryModal('${l.timestamp}')">
+                        <strong>Design: ${l.id}</strong> <span style="float:right; font-size:0.75rem; color:var(--text-light);">${l.dateStr}</span><br>
+                        <span style="color:${badgeColor}; font-weight:bold; font-size:0.85rem;">${statusText}</span>
+                        <p style="font-size:0.75rem; color:var(--text-light); margin-top:2px;">Track Scope: ${l.size} • View Log 🔍</p>
+                    </div>`;
+            });
+        }
+
+        function updateStats() {
+            document.getElementById('stat-designs').innerText = serverDesigns.length;
+            let total = 0;
+            serverDesigns.forEach(d => total += Object.values(d.sizes).reduce((a,b)=>a+b, 0));
+            document.getElementById('stat-pcs').innerText = total;
+            document.getElementById('stat-sold').innerText = Math.abs(serverLogs.filter(l => l.type === 'sell').reduce((a,b)=>a+b.qty, 0));
+        }
+    </script>
+
+    <script>
+        let currentPin = "";
+        let expectedPin = localStorage.getItem("app_security_pin") || "1234";
+        let isChangingPinMode = false;
+        let newPinDraft = "";
+
+        function pressKey(key) {
+            if (key === 'C') {
+                currentPin = "";
+                updatePinDots();
+                return;
+            }
+            
+            if (currentPin.length < 4) {
+                currentPin += key;
+            }
+            
+            updatePinDots();
+
+            if (currentPin.length === 4) {
+                setTimeout(() => { processPinVerification(); }, 250);
+            }
+        }
+
+        function updatePinDots() {
+            const dots = document.querySelectorAll('.pin-dots .dot');
+            dots.forEach((dot, idx) => dot.classList.toggle('active', idx < currentPin.length));
+        }
+
+        function processPinVerification() {
+            if (!isChangingPinMode) {
+                if (currentPin === expectedPin) {
+                    document.getElementById('lock-screen').style.display = 'none';
+                    currentPin = "";
+                    updatePinDots();
+                } else {
+                    alert("Incorrect Security PIN Entered");
+                    currentPin = "";
+                    updatePinDots();
+                }
+            } else {
+                if (newPinDraft === "") {
+                    newPinDraft = currentPin;
+                    currentPin = "";
+                    updatePinDots();
+                    document.getElementById('pin-instruction').innerText = "Confirm New 4-Digit PIN Code";
+                    document.getElementById('pin-instruction').style.color = "var(--warning)";
+                } else {
+                    if (currentPin === newPinDraft) {
+                        expectedPin = currentPin;
+                        localStorage.setItem("app_security_pin", expectedPin);
+                        alert("Security PIN Configuration Code Updated Successfully!");
+                        
+                        isChangingPinMode = false;
+                        newPinDraft = "";
+                        currentPin = "";
+                        updatePinDots();
+                        document.getElementById('pin-instruction').innerText = "Organization Security PIN";
+                        document.getElementById('pin-instruction').style.color = "var(--text-light)";
+                        document.getElementById('lock-screen').style.display = 'none';
+                    } else {
+                        alert("Codes do not match! Process aborted. Please start over.");
+                        cancelPinChangeState();
+                    }
+                }
+            }
+        }
+
+        function startPinChangeWorkflow() {
+            const promptAuth = prompt("Please verify access: Enter your current security PIN first to enable adjustment updates:");
+            if (promptAuth === expectedPin) {
+                isChangingPinMode = true;
+                newPinDraft = "";
+                currentPin = "";
+                updatePinDots();
+                document.getElementById('pin-instruction').innerText = "Enter NEW 4-Digit Security PIN Code";
+                document.getElementById('pin-instruction').style.color = "var(--primary)";
+            } else {
+                if(promptAuth !== null) alert("Authentication verification error. Request rejected.");
+            }
+        }
+
+        function cancelPinChangeState() {
+            isChangingPinMode = false;
+            newPinDraft = "";
+            currentPin = "";
+            updatePinDots();
+            document.getElementById('pin-instruction').innerText = "Organization Security PIN";
+            document.getElementById('pin-instruction').style.color = "var(--text-light)";
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(e, id) { if(e.target === document.getElementById(id)) document.getElementById(id).style.display = 'none'; }
+    </script>
+</body>
+</html>
